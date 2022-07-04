@@ -4,31 +4,72 @@
 	xsi:schemaLocation="http://Java.sun.com/xml/ns/javaee https://java.sun.com/xml/ns/javaee/web-app_2_5.xsd">
 	<!-- schemaLocation 대문자로 시작하는 Java -->
 	
-	<!-- The definition of the Root Spring Container shared by all Servlets and Filters -->
+	<!-- 빌드 과정
+	
+		웹어플리케이션 실행 
+		-> WAS가 web.xml 로드  
+		-> ApplicationContext를 생성하는 ContextLoaderListener가 web.xml에 등록된 내용에 따라 생성 
+		-> root-context.xml에 등록된 Spring Container가 구동되며 필요한 객체들 생성 
+		-> client요청 들어옴 
+		-> DipatcherServlet 생성 
+		-> 알맞은 Page Controller에게 전달하고 응답을 어떻게 할지 결정 
+		-> Dispatcher Servlet은 servlet-context.xml을 loading 
+		-> 두번째 Spring Container가 구동될 때 첫번째 Container가 구동되며 생성된 DAO, VO, ServiceImple클래스들과 협업하여 작업 처리 
+	
+	 -->
+	
+	
+	<!-- 스프링 컨테이너를 구동시키기 위한 설정파일의 위치 명시 -->
+	<!-- xml 파일로 설정 -->
 	<context-param>
 		<param-name>contextConfigLocation</param-name>
-		<param-value>/WEB-INF/spring/root-context.xml</param-value>
+		<param-value>/WEB-INF/spring/container-context.xml</param-value>
 	</context-param>
 	
-	<!-- Creates the Spring Container shared by all Servlets and Filters -->
+	<!-- java 파일로 설정-->
+	<!-- AnnotationConfigWebApplicationContext을 contextClass 이름으로 추가해야한다. 
+	
+	<context-param>
+		<param-name>contextClass</param-name>
+		<param-value>org.springframework.web.context.support.AnnotationConfigWebApplicationContext</param-value>
+	</context-param>
+	<context-param>
+		<param-name>contextConfigLocation</param-name>
+		<param-value>test.config.AppConfig</param-value> 자바 파일 경로
+	</context-param>
+	 
+	 -->
+	
+	<!-- ApplicationContext를 생성하는 ContextLoaderListener 선언 -->
+	<!-- 디폴트값으로 applicationContext.xml을 찾는다. -->
+	<!-- 
+		ContextLoaderListener 클래스는 ContextLoader 클래스를 상속하고 있는데 ContextLoader에 가보면
+		public static final String CONFIG_LOCATION_PARAM = "contextConfigLocation";  이라고 명시하고 있다
+		따라서 context-param의 param-name이 contextConfigLocation이 된다.
+		contextClass 도 마찬가지
+	
+	-->
 	<listener>
 		<listener-class>org.springframework.web.context.ContextLoaderListener</listener-class>
 	</listener>
+	
 
-	<!-- Processes application requests -->
+	<!-- 요청이 왔을 경우의 DispatcherServlet 설정 -->
 	<servlet>
-		<servlet-name>appServlet</servlet-name>
+		<servlet-name>DispatcherServlet</servlet-name>
 		<servlet-class>org.springframework.web.servlet.DispatcherServlet</servlet-class>
 		<init-param>
 			<param-name>contextConfigLocation</param-name>
-			<param-value>/WEB-INF/spring/appServlet/servlet-context.xml</param-value>
+			<param-value>/WEB-INF/spring/appServlet/dispatcher-context.xml</param-value>
 		</init-param>
 		<load-on-startup>1</load-on-startup>
 	</servlet>
 		
 	<servlet-mapping>
-		<servlet-name>appServlet</servlet-name>
+		<servlet-name>DispatcherServlet</servlet-name>
 		<url-pattern>/</url-pattern>
 	</servlet-mapping>
+	
+	
 
 </web-app>
