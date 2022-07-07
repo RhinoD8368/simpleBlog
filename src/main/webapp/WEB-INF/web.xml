@@ -4,31 +4,161 @@
 	xsi:schemaLocation="http://Java.sun.com/xml/ns/javaee https://java.sun.com/xml/ns/javaee/web-app_2_5.xsd">
 	<!-- schemaLocation 대문자로 시작하는 Java -->
 	
-	<!-- The definition of the Root Spring Container shared by all Servlets and Filters -->
+	<!-- 빌드 과정
+	
+		웹어플리케이션 실행 
+		-> WAS가 web.xml 로드  
+		-> ApplicationContext를 생성하는 ContextLoaderListener가 web.xml에 등록된 내용에 따라 생성 
+		-> root-context.xml에 등록된 Spring Container가 구동되며 필요한 객체들 생성 
+		-> client요청 들어옴 
+		-> DipatcherServlet 생성 
+		-> 알맞은 Page Controller에게 전달하고 응답을 어떻게 할지 결정 
+		-> Dispatcher Servlet은 servlet-context.xml을 loading 
+		-> 두번째 Spring Container가 구동될 때 첫번째 Container가 구동되며 생성된 DAO, VO, ServiceImple클래스들과 협업하여 작업 처리 
+	
+	 -->
+	
+	
+	<!-- 스프링 컨테이너를 구동시키기 위한 설정파일의 위치 명시 -->
+	<!-- xml 파일로 설정 -->
 	<context-param>
 		<param-name>contextConfigLocation</param-name>
-		<param-value>/WEB-INF/spring/root-context.xml</param-value>
+		<param-value>/WEB-INF/spring/container-context.xml</param-value>
 	</context-param>
 	
-	<!-- Creates the Spring Container shared by all Servlets and Filters -->
+	<!-- java 파일로 설정-->
+	<!-- AnnotationConfigWebApplicationContext을 contextClass 이름으로 추가해야한다. 
+	
+	<context-param>
+		<param-name>contextClass</param-name>
+		<param-value>org.springframework.web.context.support.AnnotationConfigWebApplicationContext</param-value>
+	</context-param>
+	<context-param>
+		<param-name>contextConfigLocation</param-name>
+		<param-value>test.config.AppConfig</param-value> 자바 파일 경로
+	</context-param>
+	 
+	 -->
+	
+	<!-- ApplicationContext를 생성하는 ContextLoaderListener 선언 -->
+	<!-- 디폴트값으로 applicationContext.xml을 찾는다. -->
+	<!-- 
+		ContextLoaderListener 클래스는 ContextLoader 클래스를 상속하고 있는데 ContextLoader에 가보면
+		public static final String CONFIG_LOCATION_PARAM = "contextConfigLocation";  이라고 명시하고 있다
+		따라서 context-param의 param-name이 contextConfigLocation이 된다.
+		contextClass 도 마찬가지
+	
+	-->
 	<listener>
 		<listener-class>org.springframework.web.context.ContextLoaderListener</listener-class>
 	</listener>
+	
 
-	<!-- Processes application requests -->
+	<!-- 요청이 왔을 경우의 DispatcherServlet 설정 -->
 	<servlet>
-		<servlet-name>appServlet</servlet-name>
+		<servlet-name>DispatcherServlet</servlet-name>
 		<servlet-class>org.springframework.web.servlet.DispatcherServlet</servlet-class>
 		<init-param>
 			<param-name>contextConfigLocation</param-name>
-			<param-value>/WEB-INF/spring/appServlet/servlet-context.xml</param-value>
+			<param-value>/WEB-INF/spring/appServlet/dispatcher-context.xml</param-value>
 		</init-param>
 		<load-on-startup>1</load-on-startup>
 	</servlet>
 		
 	<servlet-mapping>
-		<servlet-name>appServlet</servlet-name>
+		<servlet-name>DispatcherServlet</servlet-name>
 		<url-pattern>/</url-pattern>
 	</servlet-mapping>
+	
+	
+	<!-- 
+		### [filter] 설정
+		한글깨짐 문제를 CharacterEncoding을 사용하여 Encoding 처리한다.
+		encoding 값이 설정되고 forceEncoding이 true라면 설정된 값으로 Encoding을 함
+		
+		encoding 값이 설정되었지만 forceEncoding이 false라면 HttpServletRequest 객체에
+		특정 인코딩 값이 들어가 있는 경우 그 값에 맞춰 인코딩함
+		
+		여기서 url-pattern으로 /*가 지정된 의미는 / 이하로 들어오는 모든 request에 해당 filter를 적용하는 의미
+	-->
+	<filter>
+		<filter-name>encodingFilter</filter-name>
+		<filter-class>
+			org.springframework.web.filter.CharacterEncodingFilter
+		</filter-class>
+		
+		<init-param>
+			<param-name>encoding</param-name>
+			<param-value>UTF-8</param-value>
+		</init-param>
+		
+		<init-param>
+			<param-name>forceEncoding</param-name>
+			<param-value>true</param-value>
+		</init-param>
+	</filter>
+	
+	<filter-mapping> 
+		<filter-name>encodingFilter</filter-name>
+		<url-pattern>/*</url-pattern>
+	</filter-mapping>
+
+	<!-- 
+	    ### [타이틀 설정]
+	    web.xml의 title 및 주석 정도라고 생각하자
+	    보통 project의 이름으로 기술한다.
+	 -->
+	 <display-name>SimpleBlogProto</display-name>
+	 
+	 <!-- 
+	 	### [Session] 설정
+	 	값을 0이나 음수로 설정하면 세션은 유효시간을 갖지 않는다.
+	 	session.invalidate()를 호출하지 않는 이상 session 객체가 사라지지 않는다.
+	  -->
+	<session-config>
+		<session-timeout>30</session-timeout>
+	</session-config>
+	
+	<!-- 
+		### [error page]
+		location에는 절대경로 또는 url 매핑으로 컨트롤러에서 제어가 가능하다.
+		절대경로  : /WEB-INF/views/error/error.jsp 처럼 직접 jsp파일 위치를 연결
+		url 매핑 : /error 처럼 작성하여 컨트롤러에서 modelAndView 객체로 화면을 return한다.
+		
+		404,403,400,500 등 케이스별로 작성이 가능하며, 예외별로 다른 page를 보여주고 싶다면
+		<error-code>java.lang.Throwable</error-code> 처럼 자바 예외형식의 클래스 명을 입력해줘도 된다.
+	 -->
+	 <!-- 
+	<error-page>
+		<error-code>404</error-code>
+		<location>/WEB-INF/views/error/error.jsp</location>
+	</error-page>
+	<error-page>
+		<error-code>500</error-code>
+		<location>/WEB-INF/views/error/error.jsp</location>
+	</error-page>
+	 -->
+
+	<!-- 
+		### [시작 페이지] 설정
+		-webapp 밑에 index.jsp 생성
+		
+		/로 요청 시 지정되어있는 리소스를 호출한다는 의미.
+		controller에 /로 매핑되어 있는 메서드가 있더라도 web.xml에 지정되어 있는 자원을 우선시
+		 
+		보통<welcome-file-list> 는 웹사이트가 최초로 보여주는 페이지로 설정하거나,
+		login ㅔ이지로 설정하는 등 활용될 때 사용
+		
+	 -->
+	<!-- 
+		<welcome-file-list>
+   			<welcome-file>index.jsp</welcome-file>
+		</welcome-file-list>	
+	 -->
+
+
+
+
+
 
 </web-app>
