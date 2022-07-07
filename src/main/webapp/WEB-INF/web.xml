@@ -71,5 +71,94 @@
 	</servlet-mapping>
 	
 	
+	<!-- 
+		### [filter] 설정
+		한글깨짐 문제를 CharacterEncoding을 사용하여 Encoding 처리한다.
+		encoding 값이 설정되고 forceEncoding이 true라면 설정된 값으로 Encoding을 함
+		
+		encoding 값이 설정되었지만 forceEncoding이 false라면 HttpServletRequest 객체에
+		특정 인코딩 값이 들어가 있는 경우 그 값에 맞춰 인코딩함
+		
+		여기서 url-pattern으로 /*가 지정된 의미는 / 이하로 들어오는 모든 request에 해당 filter를 적용하는 의미
+	-->
+	<filter>
+		<filter-name>encodingFilter</filter-name>
+		<filter-class>
+			org.springframework.web.filter.CharacterEncodingFilter
+		</filter-class>
+		
+		<init-param>
+			<param-name>encoding</param-name>
+			<param-value>UTF-8</param-value>
+		</init-param>
+		
+		<init-param>
+			<param-name>forceEncoding</param-name>
+			<param-value>true</param-value>
+		</init-param>
+	</filter>
+	
+	<filter-mapping> 
+		<filter-name>encodingFilter</filter-name>
+		<url-pattern>/*</url-pattern>
+	</filter-mapping>
+
+	<!-- 
+	    ### [타이틀 설정]
+	    web.xml의 title 및 주석 정도라고 생각하자
+	    보통 project의 이름으로 기술한다.
+	 -->
+	 <display-name>SimpleBlogProto</display-name>
+	 
+	 <!-- 
+	 	### [Session] 설정
+	 	값을 0이나 음수로 설정하면 세션은 유효시간을 갖지 않는다.
+	 	session.invalidate()를 호출하지 않는 이상 session 객체가 사라지지 않는다.
+	  -->
+	<session-config>
+		<session-timeout>30</session-timeout>
+	</session-config>
+	
+	<!-- 
+		### [error page]
+		location에는 절대경로 또는 url 매핑으로 컨트롤러에서 제어가 가능하다.
+		절대경로  : /WEB-INF/views/error/error.jsp 처럼 직접 jsp파일 위치를 연결
+		url 매핑 : /error 처럼 작성하여 컨트롤러에서 modelAndView 객체로 화면을 return한다.
+		
+		404,403,400,500 등 케이스별로 작성이 가능하며, 예외별로 다른 page를 보여주고 싶다면
+		<error-code>java.lang.Throwable</error-code> 처럼 자바 예외형식의 클래스 명을 입력해줘도 된다.
+	 -->
+	 <!-- 
+	<error-page>
+		<error-code>404</error-code>
+		<location>/WEB-INF/views/error/error.jsp</location>
+	</error-page>
+	<error-page>
+		<error-code>500</error-code>
+		<location>/WEB-INF/views/error/error.jsp</location>
+	</error-page>
+	 -->
+
+	<!-- 
+		### [시작 페이지] 설정
+		-webapp 밑에 index.jsp 생성
+		
+		/로 요청 시 지정되어있는 리소스를 호출한다는 의미.
+		controller에 /로 매핑되어 있는 메서드가 있더라도 web.xml에 지정되어 있는 자원을 우선시
+		
+		보통<welcome-file-list> 는 웹사이트가 최초로 보여주는 페이지로 설정하거나,
+		login ㅔ이지로 설정하는 등 활용될 때 사용
+		
+	 -->
+	<!-- 
+		<welcome-file-list>
+   			<welcome-file>index.jsp</welcome-file>
+		</welcome-file-list>	
+	 -->
+
+
+
+
+
 
 </web-app>
