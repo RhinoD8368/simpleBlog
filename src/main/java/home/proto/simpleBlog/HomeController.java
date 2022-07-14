@@ -2,6 +2,7 @@ package home.proto.simpleBlog;
 
 import java.text.DateFormat;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.Locale;
 
 import javax.annotation.Resource;
@@ -54,8 +55,16 @@ public class HomeController {
 		
 		System.out.println("[ctr] : /test");
 		
+		String[] t = new String[]{"a","b"};
+		
+		HashMap<String, Object> map = new HashMap<String, Object>();
+		map.put("testMap1", "val1");
+		map.put("testMap2", "val2");
+		map.put("testMap3", "val3");
+		
+		
 		try {
-			homeService.getbiz2();
+			homeService.getbiz2("test",t,map);
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
